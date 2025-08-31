@@ -1,0 +1,20 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: SportsCenter
+  datasource:
+    url: jdbc:mysql://localhost:3306/sportscenter
+    username: root
+    password: admin
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        # Keeping the same name with the entity
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
