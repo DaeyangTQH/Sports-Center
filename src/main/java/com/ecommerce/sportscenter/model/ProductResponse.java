@@ -2,7 +2,6 @@ package com.ecommerce.sportscenter.model;
 
 import com.ecommerce.sportscenter.entity.Brand;
 import com.ecommerce.sportscenter.entity.Type;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +18,6 @@ public class ProductResponse {
     private String description;
     private double price;
     private String pictureUrl;
-    private Brand brand;
-    private Type type;
+    private String productBrand;
+    private String productType;
 }
