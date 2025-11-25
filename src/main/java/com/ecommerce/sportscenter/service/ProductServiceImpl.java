@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -29,11 +30,23 @@ public class ProductServiceImpl implements ProductService{
     }
 
     @Override
-    public Page<ProductResponse> getAllProducts(Pageable pageable) {
+    public Page<ProductResponse> getAllProducts(Pageable pageable, Integer brandId, Integer typeId, String keyword) {
         log.info("Fetching All Products!!!");
-        Page<Product> productPage = productRepository.findAll(pageable);
+        Specification<Product> spec = ((root, query, criteriaBuilder) -> null);
+
+        if(brandId != null){
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("brand").get("id"),  brandId));
+        }
+
+        if(typeId != null){
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("type").get("id"),  typeId));
+        }
+
+        if(keyword != null && !keyword.isBlank()){
+            spec = spec.and((root, query, cb) -> cb.like(root.get("name"), "%" + keyword + "%"));
+        }
         log.info("Fetched All Products!!!");
-        return productPage.map(this::convertToProductResponse);
+        return productRepository.findAll(spec, pageable).map(this::convertToProductResponse);
     }
 
     private ProductResponse convertToProductResponse(Product product){
