@@ -1,19 +1,19 @@
-import type {Product} from "../../app/models/Product.ts";
-import {Grid} from "@mui/material";
+import type { Product } from "../../app/models/Product.ts";
+import { Grid } from "@mui/material";
 import ProductCard from "./ProductCard.tsx";
 
-interface Props{
+interface Props {
     products: Product[];
 }
 
-export default function ProductList({products}: Props) {
-    return(
-        <Grid container spacing={4}>
-            {products.map((product => {
-                <Grid item xs={4} key={product.id}>
+export default function ProductList({ products }: Readonly<Props>) {
+    return (
+        <Grid container spacing={4} sx={{ p: 4}}>
+            {products.map((product) => (
+                <Grid key={product.id} size={{ xs: 12, sm: 6, md: 3 }}>
                     <ProductCard product={product} />
                 </Grid>
-            }))}
+            ))}
         </Grid>
     );
 }
