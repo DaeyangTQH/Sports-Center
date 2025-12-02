@@ -1,34 +1,36 @@
-import { Container, createTheme, CssBaseline, ThemeProvider } from '@mui/material';
-import Catalog from "../../features/catalog/Catalog.tsx";
+import {Container, createTheme, CssBaseline, ThemeProvider} from '@mui/material';
 import Header from "./Header.tsx"
-import { useState } from 'react';
+import {useState} from 'react';
+import {Outlet} from 'react-router-dom';
 
 function App() {
     //State quản lý dark mode
     const [darkMode, setDarkMode] = useState(false);
-    
+
     // Xác định palette type
     const paletteType = darkMode ? 'dark' : 'light';
 
     // function để toggle dark mode
     const theme = createTheme({
-        palette:{
+        palette: {
             mode: paletteType,
         }
     })
 
-    function handleThemeChange(){
+    function handleThemeChange() {
         setDarkMode(!darkMode);
     }
+
     return (
         <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <Header 
+            <CssBaseline/>
+            <Header
                 darkMode={darkMode}
                 handleThemeChange={handleThemeChange}
             />
-            <Container maxWidth={false} sx={{ p: 0 }}>
-                <Catalog />
+            <Container maxWidth={false} sx={{ minHeight: 'calc(100vh - 64px)', p: 2 }}>
+                <Outlet/>{ // Hoạt động dựa trên route và children, nghĩa là sẽ render Catalog hoặc các trang khác tùy theo route
+            }
             </Container>
         </ThemeProvider>
     )

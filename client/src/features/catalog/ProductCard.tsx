@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type {Product} from "../../app/models/Product.ts";
 import {Avatar, Button, Card, CardActions, CardContent, CardHeader, CardMedia, Typography} from "@mui/material";
 
@@ -17,7 +18,7 @@ export default function ProductCard({product}: Readonly<Props>) {
         return null;
     }
 
-    const formatPrice = (price: number): string => {
+    const formatPrice = (price: number): string => { // :string là kiểu dữ liệu trả về 
         return new Intl.NumberFormat('en-Vn', {
             style:'currency',
             currency:'VND',
@@ -64,7 +65,7 @@ export default function ProductCard({product}: Readonly<Props>) {
                 <Button variant="contained" fullWidth>
                     Add to Cart
                 </Button>
-                <Button variant="outlined" >
+                <Button variant="outlined" component={Link} to={`/store/${product.id}`}>
                     View
                 </Button>
             </CardActions>
