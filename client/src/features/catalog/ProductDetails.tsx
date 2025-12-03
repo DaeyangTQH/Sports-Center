@@ -1,9 +1,10 @@
 import { Divider, Grid, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from "@mui/material";
 import type { Product } from "../../app/models/Product";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useParams } from "react-router-dom";
 import agent from "../../app/api/agent";
+import NotFound from "../../app/errors/NotFoundError";
+import Spinner from "../../app/layout/Spinner.tsx";
 
 // Thay vì dùng fetch, dùng axios để có thể gọi API từ backend(Giao tiếp với backend) từ FE
 export default function ProductDetail() {
@@ -36,8 +37,8 @@ export default function ProductDetail() {
         .finally(() => setLoading(false))
     }, [id])
 
-    if(loading) return <h3>Loading product...</h3>
-    if(!product) return <h3>Product not found</h3>
+    if(loading) return <Spinner message="Loading Product..." />
+    if(!product) return <NotFound/>
 
     return (
         <Grid container spacing={6}>

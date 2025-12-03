@@ -1,6 +1,7 @@
 package com.ecommerce.sportscenter.service;
 
 import com.ecommerce.sportscenter.entity.Product;
+import com.ecommerce.sportscenter.exception.ProductNotFoundException;
 import com.ecommerce.sportscenter.model.ProductResponse;
 import com.ecommerce.sportscenter.repository.ProductRepository;
 import lombok.AccessLevel;
@@ -24,7 +25,7 @@ public class ProductServiceImpl implements ProductService{
     @Override
     public ProductResponse getProductById(int id) {
         log.info("Fetching Product with id: {}", id);
-        Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Product with id: " + id + " not found"));
+        Product product = productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException("Product with id: " + id + " not found"));
         log.info("Fetched Product with id: {}", id);
         return convertToProductResponse(product);
     }

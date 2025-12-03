@@ -2,6 +2,7 @@ import {Container, createTheme, CssBaseline, ThemeProvider} from '@mui/material'
 import Header from "./Header.tsx"
 import {useState} from 'react';
 import {Outlet} from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
     //State quản lý dark mode
@@ -23,6 +24,7 @@ function App() {
 
     return (
         <ThemeProvider theme={theme}>
+            <ToastContainer position='bottom-right' hideProgressBar theme='colored'/>
             <CssBaseline/>
             <Header
                 darkMode={darkMode}

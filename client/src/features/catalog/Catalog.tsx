@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import type {Product} from "../../app/models/Product.ts";
 import ProductList from "./ProductList.tsx";
 import agent from "../../app/api/agent.ts";
+import Spinner from "../../app/layout/Spinner.tsx";
 
 export default function Catalog() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -31,7 +32,7 @@ export default function Catalog() {
         .finally(() => setLoading(false));
     }, []);
     if(!products) return <h3>Unable to load Products</h3>
-
+    if(loading) return <Spinner message="Loading Products..." />
     return (
         <ProductList products={products}/>
     );
