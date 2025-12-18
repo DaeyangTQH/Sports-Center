@@ -1,6 +1,11 @@
 import { Link } from "react-router-dom";
 import type {Product} from "../../app/models/Product.ts";
-import {Avatar, Button, Card, CardActions, CardContent, CardHeader, CardMedia, Typography} from "@mui/material";
+import {Avatar, Button, Card, CardActions, CardContent, CardHeader, CardMedia, CircularProgress, Typography} from "@mui/material";
+import { useAppDispatch } from "../../app/store/configureStore.ts";
+import { useState } from "react";
+import agent from "../../app/api/agent.ts";
+import { setBasket } from "../basket/basketSlice.ts";
+import { LoadingButton } from "@mui/lab";
 
 interface Props{
     product: Product;
@@ -27,6 +32,20 @@ export default function ProductCard({product}: Readonly<Props>) {
     }
 
 
+    const [loading, setLoading] = useState(false);
+    const dispatch = useAppDispatch();
+    function addItem() {
+        setLoading(true);
+        agent.basket.addItem(product, dispatch)
+        .then(response => {
+            console.log(response);
+            dispatch(setBasket(response));
+        }).catch((error: any) => {
+            console.log(error);
+        }).finally(() => {
+            setLoading(false);
+        });
+    }
     return (
         <Card>
             <CardHeader avatar={
@@ -62,9 +81,14 @@ export default function ProductCard({product}: Readonly<Props>) {
             </CardContent>
 
             <CardActions>
-                <Button variant="contained" fullWidth>
-                    Add to Cart
-                </Button>
+                <LoadingButton 
+                loading={loading} 
+                variant="contained" 
+                fullWidth 
+                onClick={addItem} 
+                >
+                        Add to Cart
+                </LoadingButton>
                 <Button variant="outlined" component={Link} to={`/store/${product.id}`}>
                     View
                 </Button>

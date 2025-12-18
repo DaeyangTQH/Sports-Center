@@ -1,19 +1,21 @@
 package com.ecommerce.sportscenter.service;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.ecommerce.sportscenter.entity.Basket;
 import com.ecommerce.sportscenter.entity.BasketItem;
 import com.ecommerce.sportscenter.model.BasketItemResponse;
 import com.ecommerce.sportscenter.model.BasketResponse;
 import com.ecommerce.sportscenter.repository.BasketRepository;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -66,7 +68,7 @@ public class BasketServiceImpl implements BasketService {
         if (basket == null) return null;
         return BasketResponse.builder()
                 .id(basket.getId())
-                .basketItems(basket.getItems().stream().map(this::toBasketItemResponse).collect(Collectors.toList()))
+                .items(basket.getItems().stream().map(this::toBasketItemResponse).collect(Collectors.toList()))
                 .build();
     }
 
@@ -80,6 +82,7 @@ public class BasketServiceImpl implements BasketService {
                 .pictureUrl(basketItem.getPictureUrl())
                 .productBrand(basketItem.getProductBrand())
                 .productType(basketItem.getProductType())
+                .quantity(basketItem.getQuantity())
                 .build();
     }
 }

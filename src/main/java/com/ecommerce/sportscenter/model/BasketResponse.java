@@ -14,5 +14,5 @@ import java.util.List;
 @AllArgsConstructor
 public class BasketResponse {
     String id;
-    List<BasketItemResponse> basketItems;
+    List<BasketItemResponse> items;
 }

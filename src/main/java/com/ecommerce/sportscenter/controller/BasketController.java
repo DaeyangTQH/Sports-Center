@@ -12,7 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -48,7 +50,12 @@ public class BasketController {
     private Basket basketResponsetoBasket(BasketResponse basketResponse) {
         Basket basket = new Basket();
         basket.setId(basketResponse.getId());
-        basket.setItems(basketResponse.getBasketItems().stream().map(this::toBasketItem).collect(Collectors.toList()));
+        Optional<?> itemResponses = Optional.ofNullable(basketResponse.getItems());
+        if(itemResponses.isPresent()) {
+            basket.setItems(basketResponse.getItems().stream().map(this::toBasketItem).collect(Collectors.toList()));
+        }else{
+            basket.setItems(new ArrayList<>());
+        }
         return basket;
     }
 
