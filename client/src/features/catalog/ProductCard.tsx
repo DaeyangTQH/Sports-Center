@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import type {Product} from "../../app/models/Product.ts";
-import {Avatar, Button, Card, CardActions, CardContent, CardHeader, CardMedia, CircularProgress, Typography} from "@mui/material";
+import {Avatar, Button, Card, CardActions, CardContent, CardHeader, CardMedia, Typography} from "@mui/material";
 import { useAppDispatch } from "../../app/store/configureStore.ts";
 import { useState } from "react";
 import agent from "../../app/api/agent.ts";
