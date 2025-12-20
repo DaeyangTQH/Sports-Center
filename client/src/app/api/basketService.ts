@@ -1,7 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import axios from "axios";
 import type { Dispatch } from "redux";
-import { setBasket } from "../../features/basket/basketSlice.ts";
+import { clearBasket, setBasket } from "../../features/basket/basketSlice.ts";
 import type { Basket, BasketItem, BasketTotals } from "../models/Basket.ts";
 import type { Product } from "../models/Product.ts";
 class BasketService {
@@ -94,9 +94,20 @@ class BasketService {
                 
                 // Kiểm tra nếu xóa hết items
                 if(basket.items.length === 0){
+                    // (Optional) xóa basket trên server để đồng bộ
+                    try {
+                        await this.deleteBasket(basket.id);
+                    } catch {
+                        // ignore server delete errors; still clear client state
+                    }
+
                     // Xóa localStorage
                     localStorage.removeItem("basket");
                     localStorage.removeItem("items");
+                    localStorage.removeItem("basket_id");
+
+                    // Clear Redux để UI update ngay (fix bug không xóa được item cuối)
+                    dispatch(clearBasket());
                 } else {
                     // Nếu còn items, lưu basket đã cập nhật
                     await this.setBasket(basket, dispatch);

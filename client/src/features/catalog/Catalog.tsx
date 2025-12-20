@@ -1,229 +1,229 @@
-import { useEffect, useState } from "react";
-import type { Product } from "../../app/models/Product.ts";
-import ProductList from "./ProductList.tsx";
-import agent from "../../app/api/agent.ts";
-import Spinner from "../../app/layout/Spinner.tsx";
 import {
     Box,
     FormControl,
     FormControlLabel,
     FormLabel,
-    Grid, Pagination,
+    Grid,
+    Pagination,
     Paper,
     Radio,
     RadioGroup,
     TextField,
-    Typography
+    Typography,
 } from "@mui/material";
-import type {Brand} from "../../app/models/Brand.ts";
-import type {Type} from "../../app/models/Type.ts";
+import { useEffect, useMemo, useState } from "react";
+import agent from "../../app/api/agent";
+import Spinner from "../../app/layout/Spinner";
+import type { Brand } from "../../app/models/Brand";
+import type { Product } from "../../app/models/Product";
+import type { Type } from "../../app/models/Type";
+import ProductList from "./ProductList";
 
 export default function Catalog() {
-    const sortOptions = [
-        { value: 'asc', label: 'Ascending' },
-        { value: 'desc', label: 'Descending' }
-    ]
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [brands, setBrand] = useState<Brand[]>();
-    const [types, setType] = useState<Type[]>();
-    const [selectedSort, setSelectedSort] = useState('asc');
-    const [selectedBrand, setSelectedBrand] = useState("All");
-    const [selectedType, setSelectedType] = useState("All");
-    const [selectedBrandId, setSelectedBrandId] = useState(0);
-    const [selectedTypeId, setSelectedTypeId] = useState(0);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [totalItems, setTotalItems] = useState(0);
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
+  type SortOrder = "asc" | "desc";
+  type PageResponse<T> = {
+    content: T[];
+    totalElements: number;
+    totalPages: number;
+  };
 
-    // useEffect(() => {
-    //     agent.Store.list()
-    //         .then((products) => setProducts(products.content))
-    //         .catch(error => console.error(error))
-    //         .finally(() => setLoading(false));
-    // }, []);
-    useEffect(() => {
-        Promise.all([
-            agent.Store.list(currentPage, pageSize),
-            agent.Store.brands(),
-            agent.Store.types()
-        ]).then(([productsRes, brandsRes, typesRes]) => {
-            setProducts(productsRes.content);
-            setBrand(brandsRes);
-            setType(typesRes);
-        })
-            .catch(error =>console.error(error))
-            .finally(() => setLoading(false));
-    }, [currentPage, pageSize]);
+  const pageSize = 10;
 
-    const loadProducts = (selectedSort: string, searchKeyword = '') => {
-        setLoading(true);
-        let brandId = selectedBrandId != 0 ? selectedBrandId : undefined;
-        let typeId = selectedTypeId != 0 ? selectedTypeId : undefined;
-        const sort = "name";
-        const order = selectedSort === "asc" ? "desc" : "asc";
-        let url = `${agent.Store.apiUrl}?sort=${sort}&order=${order}`;
-        if(brandId !== undefined || typeId !== undefined){
-            url += `&`;
-            if(brandId !== undefined){
-                url += `brandId=${brandId}&`;
-            }
-            if(typeId !== undefined){
-                url += `typeId=${typeId}&`;
-            }
-            url = url.replace(/&$/,''); // Remove trailing &
-        }
-        if (searchKeyword){
-            console.log(searchKeyword);
-            agent.Store.search(searchKeyword)
-                .then((productRes) => {
-                    setProducts(productRes.content);
-                })
-                .catch(error => {console.log(error)})
-                .finally(() => setLoading(false));
-        }else{
-            agent.Store.list(page, size, undefined, undefined, url)
-                .then((productRes) => {
-                    setProducts(productRes.content);
-                })
-                .catch((error) => {console.log(error)})
-                .finally(() => setLoading(false));
-        }
-    }
+  const sortOptions: { value: SortOrder; label: string }[] = [
+    { value: "asc", label: "Ascending" },
+    { value: "desc", label: "Descending" },
+  ];
 
-    //Trigger loadProducts whenever selectedSort, selectedBrandId, or selectedTypeId changes
-    useEffect(() => {
-        loadProducts(selectedSort);
-    }, [selectedBrandId, selectedTypeId]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [types, setTypes] = useState<Type[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    const handleSortChange = (event: any) => {
-        const selectedSort = event.target.value;
-        setSelectedSort(selectedSort);
-        loadProducts( selectedSort);
+  // Params
+  const [order, setOrder] = useState<SortOrder>("asc");
+  const [brandId, setBrandId] = useState(0);
+  const [typeId, setTypeId] = useState(0);
+
+  // Search: input vs applied keyword
+  const [searchInput, setSearchInput] = useState("");
+  const [keyword, setKeyword] = useState("");
+
+  // Pagination (UI: 1-based, API: 0-based)
+  const [page, setPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const rangeText = useMemo(() => {
+    if (totalItems === 0) return "Displaying 0 of 0 products";
+    const start = (page - 1) * pageSize + 1;
+    const end = Math.min(page * pageSize, totalItems);
+    return `Displaying ${start}-${end} of ${totalItems} products`;
+  }, [page, pageSize, totalItems]);
+
+  // Load filters once
+  useEffect(() => {
+    Promise.all([agent.Store.brands(), agent.Store.types()])
+      .then(([brandsRes, typesRes]) => {
+        setBrands(brandsRes);
+        setTypes(typesRes);
+      })
+      .catch(console.error);
+  }, []);
+
+  // Load products whenever params change
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+
+    agent.Store.list({
+      page: page - 1,
+      size: pageSize,
+      keyword: keyword || undefined,
+      brandId: brandId || undefined,
+      typeId: typeId || undefined,
+      sort: "name",
+      order,
+    })
+      .then((res: PageResponse<Product>) => {
+        if (cancelled) return;
+        setProducts(res.content ?? []);
+        setTotalItems(res.totalElements ?? 0);
+        setTotalPages(res.totalPages ?? 0);
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
     };
+  }, [page, pageSize, keyword, brandId, typeId, order]);
 
-    const handleBrandChange = (event: any) => {
-        const selectedBrand = event.target.value;
-        const brand = brands?.find((b) => b.name === selectedBrand);
-        setSelectedBrand(selectedBrand);
-        if (brand) {
-            setSelectedBrandId(brand ? brand.id : 0);
-            loadProducts( selectedSort);
-        }
-    };
+  const handleApplySearch = () => {
+    const nextKeyword = searchInput.trim();
+    setPage(1);
+    setKeyword(nextKeyword);
+  };
 
-    const handleTypeChange = (event: any) => {
-        const selectedType = event.target.value;
-        const type = types?.find((t) => t.name === selectedType);
-        setSelectedType(selectedType);
-        if (type) {
-            setSelectedTypeId(type ? type.id : 0);
-            loadProducts( selectedSort);
-        }
-    }
+  const handleSortChange = (_: unknown, value: string) => {
+    setPage(1);
+    setOrder(value as SortOrder);
+  };
 
-    const handlePageChange = (event, value) => {
-        setCurrentPage(value);
-    }
+  const handleBrandChange = (_: unknown, value: string) => {
+    setPage(1);
+    setBrandId(Number(value));
+  };
 
-    if (!products) return <h3>Unable to load Products</h3>
-    if (loading) return <Spinner message="Loading Products..." />
-    return (
-        <Grid container spacing={4} sx={{ p: 4 }}>
-            <Grid size={{xs: 12}}>
-                <Box mb={2} textAlign={"center"}>
-                    <Typography variant={"subtitle1"}>
-                        Displaying {(currentPage-1)*pageSize + 1}-{Math.min(currentPage*pageSize, totalItems)} of {totalItems} products
-                    </Typography>
-                </Box>
-                <Box mt={4} display={"flex"} justifyContent={"center"}>
-                    <Pagination count={Math.ceil(totalItems/pageSize)} color={"primary"} onChange={handlePageChange} page={currentPage} />
-                </Box>
-            </Grid>
-            <Grid size={{ xs: 3, sm: 6, md: 4 }}>
-                <Paper sx={{mb: 2}}>
-                    <TextField
-                    label="Search products"
-                    variant="outlined"
-                    fullWidth
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            loadProducts(selectedSort, searchTerm);
-                        }
-                    }}
-                    >
-                    </TextField>
-                </Paper>
+  const handleTypeChange = (_: unknown, value: string) => {
+    setPage(1);
+    setTypeId(Number(value));
+  };
 
-                <Paper sx={{mb: 2, p: 2}}>
-                    <FormControl variant="outlined">
-                        <FormLabel id="sort-by-name-label">Sort by name</FormLabel>
-                        <RadioGroup
-                            aria-label="brands"
-                            name="brands"
-                            value={selectedSort}
-                            onChange={handleSortChange}
-                        >
-                            {sortOptions.map(({value, label}) => (
-                                <FormControlLabel
-                                    key={value}
-                                    value={value}
-                                    control={<Radio/>}
-                                    label={label}
-                                />
-                            ))}
-                        </RadioGroup>
-                    </FormControl>
-                </Paper>
+  const handlePageChange = (_: unknown, value: number) => {
+    setPage(value);
+  };
 
-                <Paper sx={{mb: 2, p: 2}}>
-                    <FormControl variant="outlined">
-                        <FormLabel id="brands-label">Brands</FormLabel>
-                        <RadioGroup
-                            aria-label="brands"
-                            name="brands"
-                            value={selectedBrand}
-                            onChange={handleBrandChange}
-                        >
-                            {brands?.map((brand) => (
-                                <FormControlLabel
-                                    key={brand.id}
-                                    name={brand.name}
-                                    control={<Radio/>}
-                                    label={brand.name}
-                                />
-                            ))}
-                        </RadioGroup>
-                    </FormControl>
-                </Paper>
+  if (loading) return <Spinner message="Loading Products..." />;
 
-                <Paper sx={{mb: 2, p: 2}}>
-                    <FormControl variant="outlined">
-                        <FormLabel id="types-label">Types</FormLabel>
-                        <RadioGroup
-                            aria-label="types"
-                            name="types"
-                            value={selectedType}
-                            onChange={handleTypeChange}
-                        >
-                            {types?.map((type) => (
-                                <FormControlLabel
-                                    key={type.id}
-                                    name={type.name}
-                                    control={<Radio/>}
-                                    label={type.name}
-                                />
-                            ))}
-                        </RadioGroup>
-                    </FormControl>
-                </Paper>
-            </Grid>
-            <Grid size={{ xs: 9, sm: 6, md: 8 }}>
-                <ProductList products={products} />
-            </Grid>
-        </Grid>
-    );
+  return (
+    <Grid container spacing={4} sx={{ p: 4 }}>
+      <Grid size={{ xs: 12 }}>
+        <Box mb={2} textAlign={"center"}>
+          <Typography variant={"subtitle1"}>{rangeText}</Typography>
+        </Box>
+        <Box mt={2} display={"flex"} justifyContent={"center"}>
+          <Pagination
+            count={Math.max(totalPages, 1)}
+            color={"primary"}
+            onChange={handlePageChange}
+            page={page}
+          />
+        </Box>
+      </Grid>
+
+      <Grid size={{ xs: 3, sm: 6, md: 4 }}>
+        <Paper sx={{ mb: 2 }}>
+          <TextField
+            label="Search products"
+            variant="outlined"
+            fullWidth
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleApplySearch();
+            }}
+          />
+        </Paper>
+
+        <Paper sx={{ mb: 2, p: 2 }}>
+          <FormControl variant="outlined">
+            <FormLabel id="sort-by-name-label">Sort by name</FormLabel>
+            <RadioGroup
+              aria-label="sort"
+              name="sort"
+              value={order}
+              onChange={handleSortChange}
+            >
+              {sortOptions.map(({ value, label }) => (
+                <FormControlLabel
+                  key={value}
+                  value={value}
+                  control={<Radio />}
+                  label={label}
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+        </Paper>
+
+        <Paper sx={{ mb: 2, p: 2 }}>
+          <FormControl variant="outlined">
+            <FormLabel id="brands-label">Brands</FormLabel>
+            <RadioGroup
+              aria-label="brands"
+              name="brands"
+              value={String(brandId)}
+              onChange={handleBrandChange}
+            >
+              {brands.map((b) => (
+                <FormControlLabel
+                  key={b.id}
+                  value={String(b.id)}
+                  control={<Radio />}
+                  label={b.name}
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+        </Paper>
+
+        <Paper sx={{ mb: 2, p: 2 }}>
+          <FormControl variant="outlined">
+            <FormLabel id="types-label">Types</FormLabel>
+            <RadioGroup
+              aria-label="types"
+              name="types"
+              value={String(typeId)}
+              onChange={handleTypeChange}
+            >
+              {types.map((t) => (
+                <FormControlLabel
+                  key={t.id}
+                  value={String(t.id)}
+                  control={<Radio />}
+                  label={t.name}
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+        </Paper>
+      </Grid>
+
+      <Grid size={{ xs: 9, sm: 6, md: 8 }}>
+        <ProductList products={products} />
+      </Grid>
+    </Grid>
+  );
 }

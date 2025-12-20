@@ -8,7 +8,8 @@ import type { Basket } from '../models/Basket';
 
 axios.defaults.baseURL = 'http://localhost:8081/api/';
 
-const idle = () => new Promise(resolve => setTimeout(resolve, 1500));
+// Artificial delay for demo/dev; keep at 0 for snappy UI (especially add-to-cart).
+const idle = () => new Promise(resolve => setTimeout(resolve, 0));
 const responseBody = (response: AxiosResponse) => response.data;
 
 axios.interceptors.response.use(async response => {
@@ -46,15 +47,25 @@ const requests = {
 
 const Store = {
     apiUrl: 'http://localhost:8081/api/products',
-    list: (page: number, size: number, brandId?:number, typeId?:number, url?:string ) => {
-        let requestUrl = url || '' ;
-        if (brandId!=undefined){
-            requestUrl += `&brandId=${brandId}`;
-        }
-        if (typeId!=undefined){
-            requestUrl += `&typeId=${typeId}`;
-        }
-        return requests.get(requestUrl);
+    list: (params: {
+        page: number; // 0-based
+        size: number;
+        keyword?: string;
+        brandId?: number;
+        typeId?: number;
+        sort?: string;
+        order?: 'asc' | 'desc';
+    }) => {
+        const searchParams = new URLSearchParams();
+        searchParams.set('page', String(params.page));
+        searchParams.set('size', String(params.size));
+        if (params.keyword) searchParams.set('keyword', params.keyword);
+        if (params.brandId !== undefined && params.brandId !== 0) searchParams.set('brandId', String(params.brandId));
+        if (params.typeId !== undefined && params.typeId !== 0) searchParams.set('typeId', String(params.typeId));
+        searchParams.set('sort', params.sort ?? 'name');
+        searchParams.set('order', params.order ?? 'asc');
+
+        return requests.get(`products?${searchParams.toString()}`);
     },
     details: (id: number) => requests.get(`products/${id}`),
     types: () => requests.get('products/types').then( types => [{id:0, name:'All'}, ...types]),
@@ -73,7 +84,6 @@ const basket = {
     addItem: async (item: Product, dispatch: Dispatch) =>{
         try {
             const result = await basketService.addItemToBasket(item, 1, dispatch);
-            console.log(result);
             return result.basket;
         } catch (error) {
             throw new Error('Failed to add item to basket');

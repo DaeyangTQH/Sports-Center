@@ -4,7 +4,6 @@ import {Avatar, Button, Card, CardActions, CardContent, CardHeader, CardMedia, T
 import { useAppDispatch } from "../../app/store/configureStore.ts";
 import { useState } from "react";
 import agent from "../../app/api/agent.ts";
-import { setBasket } from "../basket/basketSlice.ts";
 import { LoadingButton } from "@mui/lab";
 
 interface Props{
@@ -34,17 +33,16 @@ export default function ProductCard({product}: Readonly<Props>) {
 
     const [loading, setLoading] = useState(false);
     const dispatch = useAppDispatch();
-    function addItem() {
+    async function addItem() {
         setLoading(true);
-        agent.basket.addItem(product, dispatch)
-        .then(response => {
-            console.log(response);
-            dispatch(setBasket(response));
-        }).catch((error: any) => {
+        try {
+            // basketService.setBasket() đã dispatch(setBasket) rồi, không cần dispatch lại ở đây
+            await agent.basket.addItem(product, dispatch);
+        } catch (error: any) {
             console.log(error);
-        }).finally(() => {
+        } finally {
             setLoading(false);
-        });
+        }
     }
     return (
         <Card>

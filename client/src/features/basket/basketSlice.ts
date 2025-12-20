@@ -16,8 +16,11 @@ export const basketSlice = createSlice({
         setBasket: (state, action) => {
             // console.log('new basket set:', action.payload);
             state.basket = action.payload;
-        }
+        },
+        clearBasket: (state) => {
+            state.basket = null;
+        },
     }
 })
 
-export const {setBasket} = basketSlice.actions;
+export const {setBasket, clearBasket} = basketSlice.actions;
