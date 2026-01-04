@@ -37,7 +37,6 @@ public class ProductController {
     }
 
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<ProductResponse>> getAllProducts(
             @RequestParam(name = "page", defaultValue = "0") int page, @RequestParam(name = "size", defaultValue = "10") int size,
             @RequestParam(name = "keyword", required = false) String keyword, @RequestParam(name = "brandId", required = false) Integer brandId,

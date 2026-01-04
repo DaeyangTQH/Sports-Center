@@ -1,10 +1,10 @@
-import axios, { AxiosError, type AxiosResponse } from 'axios';
-import { router } from '../router/Routes';
-import { toast } from 'react-toastify';
-import type { Product } from '../models/Product';
+import axios, {AxiosError, type AxiosResponse} from 'axios';
+import {router} from '../router/Routes';
+import {toast} from 'react-toastify';
+import type {Product} from '../models/Product';
 import basketService from './basketService';
-import type { Dispatch } from 'redux';
-import type { Basket } from '../models/Basket';
+import type {Dispatch} from 'redux';
+import type {Basket} from '../models/Basket';
 
 axios.defaults.baseURL = 'http://localhost:8081/api/';
 
@@ -68,20 +68,20 @@ const Store = {
         return requests.get(`products?${searchParams.toString()}`);
     },
     details: (id: number) => requests.get(`products/${id}`),
-    types: () => requests.get('products/types').then( types => [{id:0, name:'All'}, ...types]),
-    brands: () => requests.get('products/brands').then( brands => [{id: 0, name:'All'}, ...brands]),
+    types: () => requests.get('products/types').then(types => [{id: 0, name: 'All'}, ...types]),
+    brands: () => requests.get('products/brands').then(brands => [{id: 0, name: 'All'}, ...brands]),
     search: (keyword: string) => requests.get(`products?keyword=${keyword}`),
 }
 
 const basket = {
-    get: async () =>{
+    get: async () => {
         try {
             return await basketService.getBasketFromApi();
         } catch (error) {
             throw new Error('Failed to get basket');
         }
-    },   
-    addItem: async (item: Product, dispatch: Dispatch) =>{
+    },
+    addItem: async (item: Product, dispatch: Dispatch) => {
         try {
             const result = await basketService.addItemToBasket(item, 1, dispatch);
             return result.basket;
@@ -89,35 +89,35 @@ const basket = {
             throw new Error('Failed to add item to basket');
         }
     },
-    removeItem: async (itemId: number, dispatch: Dispatch) =>{
+    removeItem: async (itemId: number, dispatch: Dispatch) => {
         try {
             return await basketService.remove(itemId, dispatch);
         } catch (error) {
             throw new Error('Failed to remove item from basket');
         }
     },
-    increaseItemQuantity: async (itemId: number, quantity: number = 1, dispatch: Dispatch) =>{
+    increaseItemQuantity: async (itemId: number, quantity: number = 1, dispatch: Dispatch) => {
         try {
             return await basketService.increaseItemQuantity(itemId, quantity, dispatch);
         } catch (error) {
             throw new Error('Failed to increase item quantity');
         }
     },
-    decreaseItemQuantity: async (itemId: number, quantity: number = 1, dispatch: Dispatch) =>{
+    decreaseItemQuantity: async (itemId: number, quantity: number = 1, dispatch: Dispatch) => {
         try {
             return await basketService.decreaseItemQuantity(itemId, quantity, dispatch);
         } catch (error) {
             throw new Error('Failed to decrease item quantity');
         }
     },
-    deleteBasket: async (basketId: string) =>{
+    deleteBasket: async (basketId: string) => {
         try {
             return await basketService.deleteBasket(basketId);
         } catch (error) {
             throw new Error('Failed to delete basket');
         }
     },
-    setBasket: async (basket: Basket, dispatch: Dispatch) =>{
+    setBasket: async (basket: Basket, dispatch: Dispatch) => {
         try {
             return await basketService.setBasket(basket, dispatch);
         } catch (error) {
@@ -126,9 +126,14 @@ const basket = {
     },
 }
 
+const Account = {
+    login: (values:any) => requests.post('/auth/login', values),
+}
+
 const agent = {
     Store,
-    basket
+    basket,
+    Account
 }
 
 export default agent;
