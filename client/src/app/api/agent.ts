@@ -1,12 +1,10 @@
-import axios, {AxiosError, type AxiosResponse} from 'axios';
-import {router} from '../router/Routes';
-import {toast} from 'react-toastify';
-import type {Product} from '../models/Product';
+import type { AxiosResponse } from 'axios';
+import type { Dispatch } from 'redux';
+import type { Basket } from '../models/Basket';
+import type { Product } from '../models/Product';
+import type { User } from '../models/user';
+import axios from './axiosClient';
 import basketService from './basketService';
-import type {Dispatch} from 'redux';
-import type {Basket} from '../models/Basket';
-
-axios.defaults.baseURL = 'http://localhost:8081/api/';
 
 // Artificial delay for demo/dev; keep at 0 for snappy UI (especially add-to-cart).
 const idle = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -15,28 +13,7 @@ const responseBody = (response: AxiosResponse) => response.data;
 axios.interceptors.response.use(async response => {
     await idle();
     return response;
-}, (error: AxiosError) => {
-    // Kiểm tra xem có error.response không (tránh lỗi khi network error)
-    if (error.response) {
-        const {status} = error.response;
-        switch (status) {
-            case 404:
-                toast.error('Resource not Found');
-                router.navigate('/not-found');
-                break;
-            case 500:
-                toast.error('Internal Server Error');
-                router.navigate('/server-error');
-                break;
-            default:
-                toast.error('An unexpected error occurred');
-                break;
-        }
-        return Promise.reject(error.response);
-    }
-    // Nếu không có response (network error, timeout, etc.)
-    return Promise.reject(error);
-})
+});
 
 const requests = {
     get: (url: string) => axios.get(url).then(responseBody),
@@ -127,7 +104,7 @@ const basket = {
 }
 
 const Account = {
-    login: (values:any) => requests.post('/auth/login', values),
+    login: (values: { username: string; password: string }) => requests.post('auth/login', values) as Promise<User>,
 }
 
 const agent = {

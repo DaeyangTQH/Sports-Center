@@ -1,5 +1,5 @@
 import { createId } from "@paralleldrive/cuid2";
-import axios from "axios";
+import axios from "./axiosClient";
 import type { Dispatch } from "redux";
 import { clearBasket, setBasket } from "../../features/basket/basketSlice.ts";
 import type { Basket, BasketItem, BasketTotals } from "../models/Basket.ts";

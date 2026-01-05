@@ -1,8 +1,9 @@
 import { ShoppingCart } from "@mui/icons-material";
-import { AppBar, Badge, Box, IconButton, List, ListItem, Switch, Toolbar, Typography } from "@mui/material";
+import { AppBar, Badge, Box, Button, IconButton, List, ListItem, Switch, Toolbar, Typography } from "@mui/material";
 import { useEffect } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { useAppSelector } from "../store/configureStore";
+import { useAppDispatch, useAppSelector } from "../store/configureStore";
+import { signOut } from "../../features/account/accountSlice";
 // Khai báo 1 mảng
 const navLinks = [
     { title: 'Home', path: '/' },
@@ -36,6 +37,9 @@ interface Props {
 export default function Header({ darkMode, handleThemeChange }: Readonly<Props>) {
 
     const {basket} = useAppSelector(state => state.basket);
+    const { user } = useAppSelector(state => state.account);
+    const dispatch = useAppDispatch();
+
     useEffect(() => {
         console.log(basket);
     }, [basket]);
@@ -67,13 +71,27 @@ export default function Header({ darkMode, handleThemeChange }: Readonly<Props>)
                             <ShoppingCart/>
                         </Badge>
                     </IconButton>
-                    <List sx={{display: 'flex'}}>
-                        {accountLinks.map(({title, path}) =>(
-                                <ListItem component={NavLink} to={path} sx={navStyle} key={path}>
-                                    {title}
-                                </ListItem>
-                        ))}
-                    </List>
+                    {user ? (
+                        <Box display="flex" alignItems="center" gap={2}>
+                            <Typography variant="body1">Hi, {user.username}</Typography>
+                            <Button
+                                color="inherit"
+                                variant="outlined"
+                                onClick={() => dispatch(signOut())}
+                                sx={{ borderColor: "rgba(255,255,255,0.7)" }}
+                            >
+                                Logout
+                            </Button>
+                        </Box>
+                    ) : (
+                        <List sx={{display: 'flex'}}>
+                            {accountLinks.map(({title, path}) =>(
+                                    <ListItem component={NavLink} to={path} sx={navStyle} key={path}>
+                                        {title}
+                                    </ListItem>
+                            ))}
+                        </List>
+                    )}
                 </Box>
             </Toolbar>
         </AppBar>
